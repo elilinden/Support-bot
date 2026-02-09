@@ -1,0 +1,249 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Glass UI Theme — Pro Se Coach
+   ============================================================ */
+
+:root {
+  --background-start: #0a0e1a;
+  --background-mid: #0f1629;
+  --background-end: #0b1020;
+  --accent-mint: #6ee7b7;
+  --accent-blue: #60a5fa;
+  --accent-purple: #a78bfa;
+  --accent-rose: #fb7185;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.12);
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.68);
+  --text-muted: rgba(255, 255, 255, 0.45);
+}
+
+.light {
+  --background-start: #e8ecf4;
+  --background-mid: #dfe5f0;
+  --background-end: #e2e8f2;
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-hover: rgba(255, 255, 255, 0.75);
+  --text-primary: rgba(0, 0, 0, 0.87);
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --text-muted: rgba(0, 0, 0, 0.38);
+}
+
+/* Background */
+body {
+  background: linear-gradient(
+    135deg,
+    var(--background-start) 0%,
+    var(--background-mid) 50%,
+    var(--background-end) 100%
+  );
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Noise overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Ambient glow blobs */
+.ambient-glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-glow-1 {
+  top: -10%;
+  left: -5%;
+  width: 600px;
+  height: 600px;
+  background: var(--accent-blue);
+}
+
+.ambient-glow-2 {
+  bottom: -15%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: var(--accent-purple);
+}
+
+.ambient-glow-3 {
+  top: 40%;
+  right: 20%;
+  width: 400px;
+  height: 400px;
+  background: var(--accent-mint);
+  opacity: 0.08;
+}
+
+/* Glass card */
+@layer components {
+  .glass-card {
+    @apply relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] shadow-lg backdrop-blur-xl;
+  }
+
+  .light .glass-card {
+    @apply border-white/60 bg-white/60 shadow-md;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+
+  .glass-card-hover:hover {
+    @apply border-white/20 bg-white/[0.1] shadow-xl;
+    transform: translateY(-2px);
+  }
+
+  .light .glass-card-hover:hover {
+    @apply border-white/80 bg-white/75;
+  }
+
+  .glass-input {
+    @apply w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white/90 placeholder-white/40 backdrop-blur-sm transition-colors focus:border-accent-mint/50 focus:outline-none focus:ring-1 focus:ring-accent-mint/30;
+  }
+
+  .light .glass-input {
+    @apply border-black/10 bg-white/60 text-black/80 placeholder-black/30 focus:border-accent-blue/50 focus:ring-accent-blue/30;
+  }
+
+  .glass-nav {
+    @apply sticky top-0 z-50 border-b border-white/10 bg-black/30 backdrop-blur-2xl;
+  }
+
+  .light .glass-nav {
+    @apply border-black/5 bg-white/60;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent-mint to-accent-blue px-6 py-3 font-semibold text-black transition-all hover:shadow-lg hover:shadow-accent-mint/20;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.06] px-6 py-3 font-medium text-white/90 backdrop-blur-sm transition-all hover:bg-white/[0.12];
+  }
+
+  .light .btn-secondary {
+    @apply border-black/10 bg-white/50 text-black/80 hover:bg-white/70;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-white/70 transition-all hover:bg-white/[0.08] hover:text-white;
+  }
+
+  .light .btn-ghost {
+    @apply text-black/60 hover:bg-black/5 hover:text-black/80;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent-rose/20 px-6 py-3 font-medium text-accent-rose transition-all hover:bg-accent-rose/30;
+  }
+
+  .badge-info {
+    @apply inline-flex items-center gap-1 rounded-full bg-accent-blue/20 px-3 py-1 text-xs font-medium text-accent-blue;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center gap-1 rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-medium text-yellow-400;
+  }
+
+  .badge-critical {
+    @apply inline-flex items-center gap-1 rounded-full bg-accent-rose/20 px-3 py-1 text-xs font-medium text-accent-rose;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center gap-1 rounded-full bg-accent-mint/20 px-3 py-1 text-xs font-medium text-accent-mint;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+
+  .ambient-glow {
+    display: none !important;
+  }
+
+  .glass-nav {
+    display: none !important;
+  }
+
+  .glass-card {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Typing indicator animation */
+@keyframes typingDot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.typing-dot {
+  animation: typingDot 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
