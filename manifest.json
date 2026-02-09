@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Support Bot Copilot",
+  "version": "0.2.2",
+  "description": "Autopilot for live chat widgets: drafts replies, can auto-insert/auto-send, and escalates when sensitive info is requested.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Support Bot Copilot"
+  },
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content_script.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

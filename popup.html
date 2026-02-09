@@ -1,0 +1,425 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Support Bot Copilot</title>
+
+    <style>
+      :root {
+        --bg: #0b0f19;
+        --card: rgba(255, 255, 255, 0.08);
+        --card2: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.12);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.68);
+        --muted2: rgba(255, 255, 255, 0.56);
+        --accent: #6ee7b7; /* mint */
+        --accent2: #60a5fa; /* blue */
+        --danger: #fb7185; /* rose */
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        --radius: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        width: 390px;
+        margin: 0;
+        padding: 14px;
+        color: var(--text);
+        background: radial-gradient(
+            1200px 500px at 0% 0%,
+            rgba(96, 165, 250, 0.22),
+            transparent 55%
+          ),
+          radial-gradient(900px 420px at 100% 10%, rgba(110, 231, 183, 0.18), transparent 50%),
+          var(--bg);
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        letter-spacing: 0.2px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .subtitle {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, var(--card), var(--card2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 12px;
+      }
+
+      .section {
+        margin-top: 12px;
+      }
+
+      .sectionHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .label {
+        font-size: 12px;
+        font-weight: 650;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .hint {
+        font-size: 11px;
+        color: var(--muted2);
+        margin-top: 8px;
+        line-height: 1.35;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          "Courier New", monospace;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.86);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        padding: 1px 6px;
+        border-radius: 999px;
+      }
+
+      /* Toggle row */
+      .toggleRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .toggleLeft {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .toggleLabel {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .pill {
+        font-size: 11px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+      }
+
+      /* Custom switch */
+      .switch {
+        position: relative;
+        width: 46px;
+        height: 26px;
+        flex: 0 0 auto;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        transition: 0.2s;
+        border-radius: 999px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        top: 2px;
+        background: rgba(255, 255, 255, 0.92);
+        transition: 0.2s;
+        border-radius: 999px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      }
+
+      .switch input:checked + .slider {
+        background: rgba(110, 231, 183, 0.22);
+        border-color: rgba(110, 231, 183, 0.45);
+      }
+
+      .switch input:checked + .slider:before {
+        transform: translateX(20px);
+        background: rgba(255, 255, 255, 0.98);
+      }
+
+      /* Inputs */
+      textarea.setup-box {
+        width: 100%;
+        min-height: 88px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        padding: 10px 10px;
+        font-size: 12px;
+        line-height: 1.35;
+        resize: vertical;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        outline: none;
+      }
+
+      textarea.setup-box::placeholder {
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      textarea.setup-box:focus {
+        border-color: rgba(96, 165, 250, 0.60);
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+      }
+
+      .box {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        padding: 10px;
+        font-size: 12px;
+        line-height: 1.35;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+      }
+
+      #statusMessage {
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 240px;
+        overflow: auto;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      #draftEditor {
+        display: none;
+        min-height: 120px;
+        resize: vertical;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(110, 231, 183, 0.55);
+        outline: none;
+      }
+
+      #draftEditor:focus {
+        box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.18);
+      }
+
+      /* Buttons */
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 9px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+        cursor: pointer;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.90);
+        transition: transform 0.04s ease, background 0.15s ease, border-color 0.15s ease;
+        user-select: none;
+      }
+
+      button:hover {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .btnPrimary {
+        border-color: rgba(96, 165, 250, 0.45);
+        background: rgba(96, 165, 250, 0.18);
+      }
+
+      .btnPrimary:hover {
+        background: rgba(96, 165, 250, 0.24);
+      }
+
+      .btnDanger {
+        border-color: rgba(251, 113, 133, 0.40);
+        background: rgba(251, 113, 133, 0.14);
+      }
+
+      .btnDanger:hover {
+        background: rgba(251, 113, 133, 0.20);
+      }
+
+      .btnGhost {
+        background: rgba(255, 255, 255, 0.04);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="topbar">
+      <div>
+        <h3>Support Bot Copilot</h3>
+        <div class="subtitle">Drafts replies • Inserts text • Optional auto-send</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toggleRow">
+        <div class="toggleLeft">
+          <label class="switch" title="Autopilot auto-sends after inserting">
+            <input type="checkbox" id="autopilot" />
+            <span class="slider"></span>
+          </label>
+
+          <div class="toggleLabel">
+            <span style="font-size:12px; font-weight:650;">Autopilot</span>
+            <span style="font-size:11px; color: var(--muted);">Auto-send after insert</span>
+          </div>
+        </div>
+
+        <span class="pill" id="autopilotStatus">OFF</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sectionHeader">
+        <span class="label">Quick Questionnaire</span>
+      </div>
+
+      <div id="questionnaireContainer" style="display: none;">
+        <div style="margin-bottom: 10px;">
+          <label class="label" for="issueType">What do you need?</label>
+          <select id="issueType" class="setup-box" style="width: 100%; padding: 8px; margin-top: 4px;">
+            <option value="">-- Select --</option>
+            <option value="return">Return an item</option>
+            <option value="exchange">Exchange an item</option>
+            <option value="refund">Refund</option>
+            <option value="help">Help with my order</option>
+            <option value="damage">Item arrived damaged</option>
+            <option value="missing">Item missing from order</option>
+            <option value="other">Something else</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label class="label" for="orderNumber">Order number (optional)</label>
+          <input type="text" id="orderNumber" class="setup-box" style="width: 100%; padding: 8px; margin-top: 4px;" placeholder="#12345" />
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label class="label" for="productDetails">What product/item?</label>
+          <input type="text" id="productDetails" class="setup-box" style="width: 100%; padding: 8px; margin-top: 4px;" placeholder="e.g., Blue jacket, size M" />
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label class="label" for="additionalInfo">Any other details?</label>
+          <textarea id="additionalInfo" class="setup-box" style="margin-top: 4px;" placeholder="e.g., Defective after 2 days"></textarea>
+        </div>
+
+        <div class="row">
+          <button type="button" class="btnPrimary" id="generateFollowUps">Next: Generate Questions</button>
+          <button type="button" class="btnGhost" id="skipToCustom">Skip to Custom Notes</button>
+        </div>
+
+        <!-- AI-Generated Follow-up Questions Section -->
+        <div id="followUpSection" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.12);">
+          <div class="label" style="margin-bottom: 8px;">Answer these personalized questions:</div>
+          <div id="followUpQuestionsContainer"></div>
+          
+          <div style="margin-bottom: 10px; margin-top: 12px;">
+            <label class="label" for="backupPlan">If that option isn't available...</label>
+            <div id="finalQuestionContainer" style="font-style: italic; color: var(--muted); margin-bottom: 8px;"></div>
+            <textarea id="backupPlan" class="setup-box" style="margin-top: 4px;" placeholder="Your answer..."></textarea>
+          </div>
+
+          <div class="row">
+            <button type="button" class="btnPrimary" id="submitFollowUps">Complete Setup</button>
+            <button type="button" class="btnGhost" id="editQuestionnaire">Back</button>
+          </div>
+        </div>
+
+        <div class="row" id="initialQuestionnaireBtns" style="display: flex;">
+          <button type="button" class="btnPrimary" id="submitQuestionnaire">Use This Info</button>
+          <button type="button" class="btnGhost" id="skipQuestionnaire">Skip</button>
+        </div>
+      </div>
+
+      <button type="button" class="btnPrimary" id="openQuestionnaire" style="width: 100%;">📋 Start Questionnaire</button>
+    </div>
+
+    <div class="section">
+
+      <textarea
+        id="context"
+        class="setup-box"
+        placeholder="Example:
+Goal: cancel subscription + request refund for unused months.
+Safe facts: my account email is ___, order # ___, last charge date ___.
+Tone: polite, firm.
+DO NOT share: OTP, passwords, SSN, last-4."
+      ></textarea>
+
+      <div class="row">
+        <button type="button" class="btnPrimary" id="saveContext">Save Setup</button>
+      </div>
+
+      <div class="hint">
+        Don’t store passwords/OTPs here. Add only safe info (goal, email, order #, dates).
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sectionHeader">
+        <span class="label">Latest result</span>
+      </div>
+
+      <div id="statusArea">
+        <div id="statusMessage" class="box">No events yet.</div>
+        <textarea id="draftEditor" class="box"></textarea>
+      </div>
+
+      <div class="row">
+        <button type="button" class="btnGhost" id="refresh">Refresh</button>
+        <button type="button" class="btnDanger" id="clear">Clear</button>
+        <button type="button" class="btnPrimary" id="insert">Insert Draft</button>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
