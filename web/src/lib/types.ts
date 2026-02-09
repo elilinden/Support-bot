@@ -278,6 +278,20 @@ export interface UploadedDocument {
   uploadedAt: string;
 }
 
+// -- Case status tracks the 3-step flow --
+export type CaseStatus = "intake" | "interview" | "active";
+
+// -- Critical fields the AI interview must fill --
+export const CRITICAL_FIELDS = [
+  "relationship",
+  "mostRecentIncidentDate",
+  "safety.safeNow",
+  "safety.firearmsPresent",
+  "children.childrenInvolved",
+] as const;
+
+export const MAX_INTERVIEW_TURNS = 5;
+
 // -- Case Session (OP-scoped) --
 export interface CaseSession {
   id: string;
@@ -285,6 +299,7 @@ export interface CaseSession {
   updatedAt: string;
   jurisdiction: Jurisdiction;
   title: string;
+  status: CaseStatus;
   opFacts: OPFacts;
   timeline: TimelineEvent[];
   conversation: ConversationMessage[];
@@ -293,6 +308,7 @@ export interface CaseSession {
   documents: UploadedDocument[];
   intakeCompleted: boolean;
   intakeStep: number;
+  interviewTurnCount: number;
   progressPercent: number;
 }
 
@@ -304,6 +320,9 @@ export interface UserSettings {
   county: string;
 }
 
+// -- Coach mode determines prompt behavior --
+export type CoachMode = "interview" | "roadmap_update";
+
 // -- API types --
 export interface CoachRequest {
   sessionId: string;
@@ -313,6 +332,7 @@ export interface CoachRequest {
   timeline: TimelineEvent[];
   conversationHistory: ConversationMessage[];
   tone: "formal" | "plain";
+  mode: CoachMode;
 }
 
 export interface CoachResponse {

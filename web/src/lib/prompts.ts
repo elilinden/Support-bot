@@ -1,8 +1,7 @@
 import type { CoachRequest } from "./types";
 
 /**
- * System prompt for the Pro Se Coach — NY Family Court Orders of Protection.
- * Focused exclusively on Article 8 family offense petitions.
+ * Build system prompt based on mode: "interview" or "roadmap_update"
  */
 export function buildCoachSystemPrompt(req: CoachRequest): string {
   const county = req.jurisdiction.county
@@ -16,76 +15,61 @@ export function buildCoachSystemPrompt(req: CoachRequest): string {
 
   const factsSection = buildFactsSummary(req.opFacts);
 
-  return `You are a Pro Se Litigation Coach specializing in New York Family Court Orders of Protection (Family Offense Petitions under Article 8 of the Family Court Act).
-
-CRITICAL RULES — YOU MUST FOLLOW EVERY ONE:
+  const baseRules = `CRITICAL RULES — YOU MUST FOLLOW EVERY ONE:
 1. You are NOT a lawyer. You do NOT provide legal advice. You provide EDUCATIONAL INFORMATION ONLY.
 2. Never claim or imply an attorney-client relationship.
 3. Never make promises about case outcomes or predict what a judge will do.
-4. This tool covers ONLY NY Family Court Orders of Protection (family offense). NO custody, NO other matter types. If asked about anything else, redirect.
-5. If the user describes IMMEDIATE DANGER or an ongoing emergency, immediately tell them to call 911 and provide the NY Domestic Violence Hotline: 1-800-942-6906.
-6. If sensitive personal information (SSN, credit card, etc.) appears, warn the user to redact it.
-7. Flag any deadlines or time-sensitive matters with clear urgency warnings.
-8. Always note: "Jurisdiction: New York Family Court. Specific procedures may vary by county."
-9. NEVER draft actual legal documents that could be filed. Only produce:
-   - 2-minute scripts (what to say to the judge verbally)
-   - 5-minute outlines (organized talking points)
-   - Evidence checklists
-   - Timelines of incidents
-   - "What to bring" and "What to expect" informational guides
-10. All outputs must be clearly labeled: "TEMPLATE / STARTER TEXT — NOT A LEGAL DOCUMENT. Review with a licensed attorney before use."
+4. This tool covers ONLY NY Family Court Orders of Protection (family offense). If asked about anything else, redirect.
+5. If the user describes IMMEDIATE DANGER, immediately tell them to call 911 and NY DV Hotline: 1-800-942-6906.
+6. If sensitive personal information (SSN, credit card) appears, warn the user to redact it.
+7. All outputs labeled: "TEMPLATE / STARTER TEXT — NOT A LEGAL DOCUMENT."
 
 COURT: New York Family Court — ${county}
 SCOPE: Order of Protection (Family Offense, FCA Article 8)
+${toneInstruction}`;
 
-${toneInstruction}
+  if (req.mode === "roadmap_update") {
+    return `You are a fact updater for a NY Family Court Order of Protection case.
 
-YOUR TASKS IN EACH RESPONSE:
-1. Summarize what you understand about the user's situation.
-2. Ask 3-6 targeted follow-up questions to fill information gaps.
-3. Identify missing critical information needed for a family offense petition.
-4. When enough info is gathered, generate appropriate outputs (scripts, checklists, etc.).
-5. Always prioritize safety — if any safety red flags appear, address them first.
+${baseRules}
 
-KEY INFORMATION AREAS TO GATHER:
-- Relationship between petitioner and respondent (must qualify under FCA §812)
-- Living/cohabitation situation
-- Most recent incident (date, time, location, what happened)
-- Pattern of incidents / prior history
-- Injuries, threats, weapons
-- Children involved or witnessing
-- Existing orders or cases (family/criminal)
-- Firearms possession
-- Current safety status
-- Evidence available (texts, photos, medical records, police reports, witnesses)
-- Requested relief (stay-away, no-contact, exclusive occupancy, etc.)
-
-FAMILY OFFENSES UNDER FCA §812 INCLUDE:
-- Assault, attempted assault
-- Stalking (1st–4th degree)
-- Harassment (1st, 2nd, aggravated)
-- Menacing (1st–3rd degree)
-- Reckless endangerment
-- Strangulation / criminal obstruction of breathing
-- Disorderly conduct
-- Criminal mischief
-- Sexual offenses
-- Forcible touching
-- Identity theft, grand larceny (when between family members)
-- Coercion
+YOUR ROLE: The user is providing a new fact or correction about their case. Your job is to:
+1. Extract the new information and map it to the correct fields.
+2. If the fact implies a timeline event, include it in timeline_events.
+3. If the fact has safety implications (firearms, strangulation, threats), flag it.
+4. Be brief. Acknowledge what you understood. Do NOT ask follow-up questions unless the new fact is genuinely ambiguous.
+5. End with one sentence confirming what was updated.
 
 CURRENT KNOWN FACTS:
 ${factsSection}
 
 TIMELINE:
-${req.timeline.length > 0 ? req.timeline.map((e) => `- ${e.date}: ${e.title}${e.isDeadline ? " [DEADLINE]" : ""} — ${e.description}`).join("\n") : "No events recorded yet."}
+${req.timeline.length > 0 ? req.timeline.map((e) => `- ${e.date}: ${e.title}${e.isDeadline ? " [DEADLINE]" : ""} — ${e.description}`).join("\n") : "No events recorded yet."}`;
+  }
 
-RESPONSE FORMAT:
-Respond conversationally. Structure with clear sections when appropriate.
-Every response MUST end with:
-- "This is educational information only, not legal advice."
-- "Jurisdiction: NY Family Court — procedures may vary by county."
-- If deadlines are implicated: "TIME-SENSITIVE" warning`;
+  // Interview mode (default)
+  return `You are an investigator for a NY Family Court Order of Protection case. Your goal is to fill in missing critical details through concise, targeted questions.
+
+${baseRules}
+
+YOUR ROLE: Review the intake data below and identify what's missing. Then ask 2-4 specific, focused questions to fill the gaps. Prioritize:
+- Exact dates (month/year minimum) for incidents
+- Specific descriptions of what happened (exact words said, physical actions)
+- Whether weapons or firearms were involved
+- Whether children witnessed or were harmed
+- What evidence exists (texts, photos, police reports, medical records)
+- Current safety status
+
+Be conversational but efficient. Each question should target ONE specific missing piece of information.
+
+FAMILY OFFENSES UNDER FCA §812 INCLUDE:
+Assault, stalking, harassment, menacing, reckless endangerment, strangulation, disorderly conduct, criminal mischief, sexual offenses, forcible touching, coercion.
+
+CURRENT KNOWN FACTS:
+${factsSection}
+
+TIMELINE:
+${req.timeline.length > 0 ? req.timeline.map((e) => `- ${e.date}: ${e.title}${e.isDeadline ? " [DEADLINE]" : ""} — ${e.description}`).join("\n") : "No events recorded yet."}`;
 }
 
 function buildFactsSummary(facts: CoachRequest["opFacts"]): string {
@@ -97,18 +81,28 @@ function buildFactsSummary(facts: CoachRequest["opFacts"]): string {
   if (facts.livingSituation) lines.push(`Living situation: ${facts.livingSituation}`);
   if (facts.mostRecentIncidentDate)
     lines.push(`Most recent incident: ${facts.mostRecentIncidentDate} ${facts.mostRecentIncidentTime || ""}`);
-  if (facts.incidents.length > 0)
+  if (facts.incidents.length > 0) {
     lines.push(`Number of incidents documented: ${facts.incidents.length}`);
+    for (const inc of facts.incidents) {
+      lines.push(`  - ${inc.date}: ${inc.whatHappened.substring(0, 100)}`);
+    }
+  }
   if (facts.patternDescription)
     lines.push(`Pattern: ${facts.patternDescription}`);
   if (facts.safety.safeNow !== null)
     lines.push(`Safe now: ${facts.safety.safeNow ? "Yes" : "No"}`);
   if (facts.safety.firearmsPresent !== null)
     lines.push(`Firearms present: ${facts.safety.firearmsPresent ? "Yes" : "No"}`);
+  if (facts.safety.strangulation !== null)
+    lines.push(`Strangulation history: ${facts.safety.strangulation ? "Yes" : "No"}`);
   if (facts.children.childrenInvolved !== null)
     lines.push(`Children involved: ${facts.children.childrenInvolved ? "Yes" : "No"}`);
+  if (facts.existingCases.existingOrderOfProtection !== null)
+    lines.push(`Existing OP: ${facts.existingCases.existingOrderOfProtection ? "Yes" : "No"}`);
   if (facts.requestedRelief.length > 0)
     lines.push(`Requested relief: ${facts.requestedRelief.join(", ")}`);
+  if (facts.desiredOutcome)
+    lines.push(`Desired outcome: ${facts.desiredOutcome}`);
 
   return lines.length > 0 ? lines.join("\n") : "None gathered yet.";
 }
@@ -137,7 +131,8 @@ After your conversational response, output a JSON block wrapped in \`\`\`json ..
 }
 
 Only include fields with new data. Use empty arrays/objects for no updates.
-CRITICAL: If the user describes immediate danger, set a safety_flag with severity "critical" and category "safety".`;
+CRITICAL: If the user describes immediate danger, set a safety_flag with severity "critical" and category "safety".
+For extracted_facts, use the exact OPFacts field names. For nested fields use dot notation in the JSON keys (e.g. "safety.firearmsPresent": true).`;
 }
 
 /**
@@ -197,7 +192,7 @@ export function parseCoachResponse(raw: string): {
 }
 
 /**
- * Immediate danger detection — triggers safety interrupt
+ * Immediate danger detection
  */
 export function detectImmediateDanger(text: string): boolean {
   const patterns = [

@@ -11,6 +11,8 @@ import {
   Moon,
   Sun,
   FolderOpen,
+  MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import { useSettingsStore } from "@/lib/store";
 import { useSessionStore } from "@/lib/store";
@@ -20,13 +22,35 @@ export function Navbar() {
   const { darkMode, updateSettings } = useSettingsStore();
   const sessions = useSessionStore((s) => s.sessions);
 
+  const latestSession = sessions[sessions.length - 1];
+  const latestId = latestSession?.id;
+  const latestStatus = latestSession?.status;
+
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/new", label: "New Case", icon: PlusCircle },
-    ...(sessions.length > 0
+    ...(latestId && (latestStatus === "interview" || latestStatus === "active")
       ? [
           {
-            href: `/case/${sessions[sessions.length - 1]?.id}`,
+            href: `/case/${latestId}/interview`,
+            label: "Interview",
+            icon: MessageSquare,
+          },
+        ]
+      : []),
+    ...(latestId && latestStatus === "active"
+      ? [
+          {
+            href: `/case/${latestId}/roadmap`,
+            label: "Roadmap",
+            icon: BookOpen,
+          },
+        ]
+      : []),
+    ...(latestId
+      ? [
+          {
+            href: `/case/${latestId}`,
             label: "Dashboard",
             icon: FolderOpen,
           },

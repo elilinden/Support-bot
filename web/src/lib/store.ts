@@ -7,6 +7,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   CaseSession,
+  CaseStatus,
   UserSettings,
   ConversationMessage,
   TimelineEvent,
@@ -16,7 +17,7 @@ import type {
   OPFacts,
   ArtifactType,
 } from "./types";
-import { createDefaultOPFacts, DEFAULT_JURISDICTION } from "./types";
+import { createDefaultOPFacts, DEFAULT_JURISDICTION, CRITICAL_FIELDS } from "./types";
 import { generateId } from "./utils";
 
 // ============================================================
@@ -65,6 +66,9 @@ interface SessionState {
   addArtifact: (sessionId: string, artifact: { type: ArtifactType; title: string; content: string }) => void;
   addSafetyFlags: (sessionId: string, flags: Omit<SafetyFlag, "id" | "createdAt">[]) => void;
   addDocument: (sessionId: string, doc: Omit<UploadedDocument, "id" | "uploadedAt">) => void;
+  incrementTurnCount: (sessionId: string) => void;
+  setStatus: (sessionId: string, status: CaseStatus) => void;
+  getMissingCriticalFields: (sessionId: string) => string[];
 }
 
 export const useSessionStore = create<SessionState>()(
@@ -82,6 +86,7 @@ export const useSessionStore = create<SessionState>()(
           updatedAt: now,
           jurisdiction: partial?.jurisdiction || { ...DEFAULT_JURISDICTION },
           title: partial?.title || "Order of Protection Case",
+          status: partial?.status || "intake",
           opFacts: partial?.opFacts || createDefaultOPFacts(),
           timeline: partial?.timeline || [],
           conversation: [],
@@ -90,6 +95,7 @@ export const useSessionStore = create<SessionState>()(
           documents: [],
           intakeCompleted: false,
           intakeStep: 0,
+          interviewTurnCount: 0,
           progressPercent: 0,
           ...partial,
         };
@@ -252,6 +258,46 @@ export const useSessionStore = create<SessionState>()(
               : s
           ),
         })),
+
+      incrementTurnCount: (sessionId) =>
+        set((state) => ({
+          sessions: state.sessions.map((s) =>
+            s.id === sessionId
+              ? { ...s, interviewTurnCount: s.interviewTurnCount + 1, updatedAt: new Date().toISOString() }
+              : s
+          ),
+        })),
+
+      setStatus: (sessionId, status) =>
+        set((state) => ({
+          sessions: state.sessions.map((s) =>
+            s.id === sessionId
+              ? { ...s, status, updatedAt: new Date().toISOString() }
+              : s
+          ),
+        })),
+
+      getMissingCriticalFields: (sessionId) => {
+        const session = get().sessions.find((s) => s.id === sessionId);
+        if (!session) return [...CRITICAL_FIELDS];
+        const f = session.opFacts;
+        const missing: string[] = [];
+        for (const field of CRITICAL_FIELDS) {
+          if (field.includes(".")) {
+            const [parent, child] = field.split(".");
+            const obj = (f as unknown as Record<string, Record<string, unknown>>)[parent];
+            if (obj && (obj[child] === null || obj[child] === "" || obj[child] === undefined)) {
+              missing.push(field);
+            }
+          } else {
+            const val = (f as unknown as Record<string, unknown>)[field];
+            if (val === null || val === "" || val === undefined) {
+              missing.push(field);
+            }
+          }
+        }
+        return missing;
+      },
     }),
     {
       name: "prose-coach-sessions",

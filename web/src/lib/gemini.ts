@@ -43,40 +43,30 @@ export interface LLMResponse {
 }
 
 /**
- * Mock response for development — OP-specific
+ * Mock response for development — OP-specific, mode-aware
  */
-function getMockResponse(userMessage: string): string {
+function getMockInterviewResponse(userMessage: string): string {
   const desc = userMessage.substring(0, 100).replace(/"/g, '\\"');
-  return `Thank you for sharing that. I want to help you understand the NY Family Court Order of Protection process.
+  return `Thank you for sharing that. I've reviewed the intake data you provided. Let me ask a few follow-up questions to fill in the gaps.
 
 **What I Understand So Far:**
-Based on what you've told me, it sounds like you may be dealing with a family offense situation in New York. An Order of Protection (OP) under Article 8 of the Family Court Act can provide legal protections such as stay-away orders, no-contact orders, and exclusive occupancy of a shared residence.
+Based on your intake, I can see some details about your situation. To build the strongest possible case for your Order of Protection, I need a few more specific details.
 
-**Key Questions to Help Me Understand Your Situation:**
-1. What is your relationship with the person you need protection from? (This is important because Family Court OPs only cover specific relationships under FCA §812.)
-2. When did the most recent incident occur? Please include the date, approximate time, and location.
-3. Were there any physical injuries, threats of violence, or use of weapons?
-4. Are there children who witnessed or were affected by any incidents?
-5. Do you have any evidence such as text messages, photos of injuries, police reports, or medical records?
-6. Are you currently safe, or do you have concerns about your immediate safety?
+**Follow-Up Questions:**
+1. Can you provide the exact date (month/day/year) of the most recent incident? Specific dates are critical for the petition.
+2. Were there any weapons or firearms involved in any incident? This affects the type of order the court may issue.
+3. Are there children who witnessed or were directly affected by any of the incidents you described?
 
-**What You Should Know:**
-- In NY Family Court, you can file for an Order of Protection if the respondent is a spouse, former spouse, intimate partner, family member, or someone you share a child with.
-- A Temporary Order of Protection (TOP) can often be issued the same day you file your petition.
-- You do NOT need a lawyer to file, though legal aid organizations can help.
+Each answer helps us fill in the critical fields needed for your Family Court petition under FCA Article 8.
 
 This is educational information only, not legal advice.
-Jurisdiction: NY Family Court — procedures may vary by county.
 
 \`\`\`json
 {
   "next_questions": [
-    "What is your relationship with the person you need protection from?",
-    "When and where did the most recent incident occur?",
-    "Were there injuries, threats, or weapons involved?",
-    "Are children involved or did they witness any incidents?",
-    "What evidence do you have (texts, photos, police reports, medical records)?",
-    "Are you currently safe?"
+    "What is the exact date of the most recent incident?",
+    "Were any weapons or firearms involved?",
+    "Did children witness or were they affected by any incidents?"
   ],
   "extracted_facts": {
     "additionalNotes": "${desc}"
@@ -84,17 +74,37 @@ Jurisdiction: NY Family Court — procedures may vary by county.
   "missing_fields": [
     "relationship",
     "mostRecentIncidentDate",
-    "respondentName",
-    "livingSituation",
     "safety.safeNow",
-    "children.childrenInvolved",
-    "evidence"
+    "safety.firearmsPresent",
+    "children.childrenInvolved"
   ],
-  "progress_percent": 10,
+  "progress_percent": 25,
   "safety_flags": [
-    { "severity": "info", "message": "This is educational information only, not legal advice.", "category": "legal_limit" },
-    { "severity": "info", "message": "NY Family Court — procedures may vary by county.", "category": "jurisdiction" }
+    { "severity": "info", "message": "This is educational information only, not legal advice.", "category": "legal_limit" }
   ],
+  "timeline_events": [],
+  "suggested_artifacts": []
+}
+\`\`\``;
+}
+
+function getMockRoadmapUpdateResponse(userMessage: string): string {
+  const desc = userMessage.substring(0, 100).replace(/"/g, '\\"');
+  return `Got it. I've recorded that update to your case facts.
+
+**Updated:** ${desc}
+
+Your roadmap has been refreshed with this new information.
+
+\`\`\`json
+{
+  "next_questions": [],
+  "extracted_facts": {
+    "additionalNotes": "${desc}"
+  },
+  "missing_fields": [],
+  "progress_percent": 60,
+  "safety_flags": [],
   "timeline_events": [],
   "suggested_artifacts": []
 }
@@ -108,8 +118,11 @@ export async function callLLM(options: LLMCallOptions): Promise<LLMResponse> {
   if (MOCK_LLM) {
     // Simulate a small delay for realism
     await new Promise((r) => setTimeout(r, 500));
+    const isRoadmap = options.systemPrompt.includes("fact updater");
     return {
-      text: getMockResponse(options.userMessage),
+      text: isRoadmap
+        ? getMockRoadmapUpdateResponse(options.userMessage)
+        : getMockInterviewResponse(options.userMessage),
       model: "mock",
       mock: true,
     };

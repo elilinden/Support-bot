@@ -13,6 +13,11 @@ export async function POST(req: NextRequest) {
   try {
     const body: CoachRequest = await req.json();
 
+    // Default mode to "interview" if not specified
+    if (!body.mode) {
+      body.mode = "interview";
+    }
+
     // Validate required fields
     if (!body.sessionId || !body.userMessage) {
       return NextResponse.json(

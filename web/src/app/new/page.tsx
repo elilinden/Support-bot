@@ -396,12 +396,13 @@ export default function NewIntakePage() {
       intakeCompleted: true,
       intakeStep: TOTAL_STEPS,
       progressPercent: 15,
+      status: "interview",
       title: county
         ? `OP Case - ${county} County`
         : "Order of Protection Case",
     });
 
-    router.push(`/case/${sessionId}/coach`);
+    router.push(`/case/${sessionId}/interview`);
   }, [
     county,
     relationship,
